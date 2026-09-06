@@ -11,12 +11,8 @@
 .dynamic-poster-cell{height:auto;min-height:180px;overflow:hidden;background:#eef2f7;display:flex;align-items:center;justify-content:center}
 .dyn-poster-thumb{width:100%;height:auto;max-height:320px;object-fit:contain;display:block;cursor:zoom-in;border-radius:10px;transition:transform .15s ease}
 .dyn-poster-thumb:hover{transform:scale(1.015)}
-.poster-viewer{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;display:none;align-items:center;justify-content:center;padding:18px}
-.poster-viewer.open{display:flex}
-.poster-viewer img{max-width:96vw;max-height:94vh;width:auto;height:auto;object-fit:contain;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.45);cursor:zoom-out}
-.poster-viewer-close{position:absolute;right:16px;top:12px;width:48px;height:48px;border-radius:50%;background:#fff;color:#111;font-size:30px;line-height:48px;text-align:center;font-weight:900;cursor:pointer}
-.poster-viewer-hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;padding:7px 12px;border-radius:999px;font-size:14px;font-weight:800}
-@media(max-width:760px){.poster-viewer{padding:8px}.poster-viewer img{max-width:98vw;max-height:92vh}.poster-viewer-close{right:8px;top:8px}}
+.poster-viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:none;flex-direction:column;align-items:stretch;justify-content:center;padding:70px 14px 54px}.poster-viewer.open{display:flex}.poster-viewer-topbar{position:absolute;left:14px;right:76px;top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:2}.poster-viewer-title{color:#fff;font-size:18px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.poster-zoom-controls{display:flex;gap:7px;align-items:center}.poster-zoom-controls button{min-width:44px;height:42px;padding:6px 12px;border-radius:9px;background:#fff;color:#111;font-size:20px;font-weight:900;cursor:pointer}.poster-viewer-stage{width:100%;height:100%;overflow:auto;display:flex;align-items:center;justify-content:center;touch-action:pan-x pan-y;background:rgba(255,255,255,.035);border-radius:10px}.poster-viewer-stage img{width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);cursor:zoom-in;user-select:none;-webkit-user-drag:none}.poster-viewer-hint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:rgba(0,0,0,.72);color:#fff;padding:7px 12px;border-radius:999px;font-size:13px;font-weight:800;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}.poster-viewer-close{position:absolute;right:16px;top:12px;width:48px;height:48px;border-radius:50%;background:#fff;color:#111;font-size:30px;line-height:48px;text-align:center;font-weight:900;cursor:pointer;z-index:3}.poster-viewer-stage img.zoomed{max-width:none;max-height:none}.poster-viewer-stage img.zoomed{width:var(--poster-zoom-width);height:auto}
+@media(max-width:760px){.dynamic-comp-row{grid-template-columns:1fr}.dynamic-poster-cell{width:100%;height:340px;min-height:340px}.poster-viewer{padding:62px 6px 48px}.poster-viewer-topbar{left:8px;right:62px;top:8px}.poster-viewer-title{font-size:15px}.poster-zoom-controls button{min-width:40px;height:38px;padding:5px 9px}.poster-viewer-close{right:8px;top:8px}.poster-viewer-hint{font-size:11px}}
 .cap{font-size:18px;font-weight:900;padding:9px 3px}.empty{text-align:center;background:#fff;border:1px dashed var(--line);border-radius:13px;padding:22px;color:var(--muted);font-size:18px}.small-note{font-size:15px;color:var(--muted);line-height:1.4;margin-top:8px}footer{text-align:center;color:var(--muted);font-size:15px;padding:20px 12px 30px}
 .coming-title{font-size:24px;font-weight:900;margin:24px 0 10px;padding-top:14px;border-top:3px solid var(--line)}
 .coming-card{background:#fffdf2;border:2px dashed var(--yellow);border-radius:15px;padding:16px;margin:11px 0;box-shadow:var(--shadow)}
@@ -169,7 +165,7 @@
 @media(max-width:760px){#dosInputFields .field label{min-height:auto}}
 
 /* ===== DYNAMIC COMPETITION MANAGER ===== */
-.dynamic-manager-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.file-btn{display:inline-flex;align-items:center;cursor:pointer}.dynamic-builder{margin:14px 0;padding:16px;border:2px solid #cfd9e7;border-radius:14px;background:#f8fbff}.role-checks{display:flex;gap:14px;flex-wrap:wrap;font-weight:800}.bonus-below{display:block;clear:both;margin-top:18px}.dyn-rule-row{display:grid;grid-template-columns:1fr 2fr 2fr auto;gap:8px;margin:8px 0}.dyn-ms-row{grid-template-columns:1.5fr 1fr 2fr auto}.dyn-rule-row input{padding:10px;border:1px solid #cfd9e7;border-radius:9px}.dynamic-builder-actions{display:flex;gap:10px;margin-top:14px}.dynamic-comp-row{display:grid;grid-template-columns:110px 1fr;gap:14px;padding:14px;margin:10px 0;border:2px solid #dbe3ef;border-radius:14px;background:#fff}.dynamic-poster-cell{width:110px;height:120px;border-radius:10px;overflow:hidden;background:#eef2f7;display:flex;align-items:center;justify-content:center}.dyn-poster-thumb{width:100%;height:100%;object-fit:cover}.dyn-poster-placeholder{font-size:12px;font-weight:800;text-align:center}.dynamic-comp-name{font-size:21px;font-weight:950;margin-bottom:5px}.dynamic-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.btn-danger{border:0;background:#ffe8e8;color:#a40000;border-radius:9px;padding:9px 12px;font-weight:900;cursor:pointer}@media(max-width:760px){.dyn-rule-row,.dyn-ms-row{grid-template-columns:1fr}.dynamic-comp-row{grid-template-columns:1fr}.dynamic-poster-cell{width:100%;height:180px}}
+.dynamic-manager-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.file-btn{display:inline-flex;align-items:center;cursor:pointer}.dynamic-builder{margin:14px 0;padding:16px;border:2px solid #cfd9e7;border-radius:14px;background:#f8fbff}.role-checks{display:flex;gap:14px;flex-wrap:wrap;font-weight:800}.bonus-below{display:block;clear:both;margin-top:18px}.dyn-rule-row{display:grid;grid-template-columns:1fr 2fr 2fr auto;gap:8px;margin:8px 0}.dyn-ms-row{grid-template-columns:1.5fr 1fr 2fr auto}.dyn-rule-row input{padding:10px;border:1px solid #cfd9e7;border-radius:9px}.dynamic-builder-actions{display:flex;gap:10px;margin-top:14px}.dynamic-comp-row{display:grid;grid-template-columns:110px 1fr;gap:14px;padding:14px;margin:10px 0;border:2px solid #dbe3ef;border-radius:14px;background:#fff}.dynamic-poster-cell{width:220px;min-height:280px;height:280px;border-radius:12px;overflow:hidden;background:#eef2f7;display:flex;align-items:center;justify-content:center;padding:8px;border:1px solid #dbe3ef}.dyn-poster-thumb{width:100%;height:100%;object-fit:contain;display:block;cursor:zoom-in;border-radius:9px;background:#fff}.dyn-poster-placeholder{font-size:12px;font-weight:800;text-align:center}.dynamic-comp-name{font-size:21px;font-weight:950;margin-bottom:5px}.dynamic-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.btn-danger{border:0;background:#ffe8e8;color:#a40000;border-radius:9px;padding:9px 12px;font-weight:900;cursor:pointer}@media(max-width:760px){.dyn-rule-row,.dyn-ms-row{grid-template-columns:1fr}.dynamic-comp-row{grid-template-columns:1fr}.dynamic-poster-cell{width:100%;height:180px}}
 </style>
 
 <style>
@@ -296,8 +292,18 @@
 </main>
 <div id="posterViewer" class="poster-viewer" role="dialog" aria-modal="true" aria-label="Poster viewer" onclick="closePosterViewer(event)">
   <button class="poster-viewer-close" type="button" aria-label="Close" onclick="closePosterViewer()">×</button>
-  <img id="posterViewerImg" src="" alt="पूरा Poster" onclick="event.stopPropagation()">
-  <div class="poster-viewer-hint">🔍 पूरा poster देखने के लिए खोलें • बंद करने के लिए बाहर क्लिक करें / × दबाएँ</div>
+  <div class="poster-viewer-topbar" onclick="event.stopPropagation()">
+    <div id="posterViewerTitle" class="poster-viewer-title">पूरा Poster</div>
+    <div class="poster-zoom-controls">
+      <button type="button" onclick="posterZoomOut()" aria-label="Zoom out">−</button>
+      <button type="button" onclick="posterZoomReset()" aria-label="Reset zoom">100%</button>
+      <button type="button" onclick="posterZoomIn()" aria-label="Zoom in">+</button>
+    </div>
+  </div>
+  <div id="posterViewerStage" class="poster-viewer-stage" onclick="event.stopPropagation()">
+    <img id="posterViewerImg" src="" alt="पूरा Poster" draggable="false">
+  </div>
+  <div class="poster-viewer-hint">🔍 Poster पूरा देखने के लिए क्लिक करें • Mouse wheel / + − से zoom करें • बाहर क्लिक या × से बंद करें</div>
 </div>
 <footer>VIJETA • Public direct-link calculator • Competition rules are server-managed by Admin.</footer>
 <script>
@@ -320,19 +326,41 @@ function dateObj(s){return new Date(s+'T00:00:00')}
 function fmt(s){return dateObj(s).toLocaleDateString('hi-IN',{day:'2-digit',month:'short',year:'numeric'})}
 function money(n){return '₹'+Math.round(n).toLocaleString('en-IN')}
 
+let posterZoom=1;
+function applyPosterZoom(){
+ const img=document.getElementById('posterViewerImg');
+ if(!img)return;
+ if(posterZoom<=1){
+   img.classList.remove('zoomed');
+   img.style.removeProperty('--poster-zoom-width');
+ }else{
+   img.classList.add('zoomed');
+   img.style.setProperty('--poster-zoom-width',Math.round(posterZoom*100)+'%');
+ }
+ const reset=document.querySelector('.poster-zoom-controls button:nth-child(2)');
+ if(reset)reset.textContent=Math.round(posterZoom*100)+'%';
+}
+function posterZoomIn(){posterZoom=Math.min(4,Math.round((posterZoom+0.25)*100)/100);applyPosterZoom()}
+function posterZoomOut(){posterZoom=Math.max(1,Math.round((posterZoom-0.25)*100)/100);applyPosterZoom()}
+function posterZoomReset(){posterZoom=1;applyPosterZoom()}
 function openPosterViewer(src,title){
- const v=document.getElementById('posterViewer'),img=document.getElementById('posterViewerImg');
+ const v=document.getElementById('posterViewer'),img=document.getElementById('posterViewerImg'),t=document.getElementById('posterViewerTitle');
  if(!v||!img||!src)return;
+ posterZoom=1;
  img.src=src; img.alt=title?('पूरा Poster — '+title):'पूरा Poster';
+ if(t)t.textContent=title||'पूरा Poster';
  v.classList.add('open'); document.body.style.overflow='hidden';
+ applyPosterZoom();
 }
 function closePosterViewer(e){
  if(e && e.target && e.target.id!=='posterViewer' && !e.target.classList.contains('poster-viewer-close')) return;
  const v=document.getElementById('posterViewer'); if(v)v.classList.remove('open');
  document.body.style.overflow='';
- const img=document.getElementById('posterViewerImg'); if(img)img.src='';
+ const img=document.getElementById('posterViewerImg'); if(img){img.src='';img.classList.remove('zoomed');img.style.removeProperty('--poster-zoom-width')}
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closePosterViewer();});
+const posterStage=document.getElementById('posterViewerStage');
+if(posterStage)posterStage.addEventListener('wheel',e=>{e.preventDefault();if(e.deltaY<0)posterZoomIn();else posterZoomOut()},{passive:false});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePosterViewer();if(document.getElementById('posterViewer')?.classList.contains('open')){if(e.key==='+')posterZoomIn();if(e.key==='-')posterZoomOut();if(e.key==='0')posterZoomReset()}});
 
 // ===== VIJETA SERVER-BACKED COMPETITION ENGINE =====
 // All competitions (legacy/source + newly uploaded) are managed in one server-backed list.
