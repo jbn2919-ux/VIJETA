@@ -380,15 +380,13 @@ function exportDynamicConfig(){const blob=new Blob([JSON.stringify({competitions
 function importDynamicConfig(inp){const file=inp.files[0];if(!file)return;const rd=new FileReader();rd.onload=()=>{try{const x=JSON.parse(rd.result);if(Array.isArray(x.competitions))dynamicComps=x.competitions;saveDynamic();renderDynamicPosters();renderDynamicFields();renderRunning();calculate();alert('Backup restore हो गया।')}catch(e){alert('Invalid VIJETA backup file.')}};rd.readAsText(file)}
 
 function todayISO(){
-  const parts = new Intl.DateTimeFormat('en-CA',{
+  const parts=new Intl.DateTimeFormat('en-CA',{
     timeZone:'Asia/Kolkata',
     year:'numeric',
     month:'2-digit',
     day:'2-digit'
   }).formatToParts(new Date());
-
-  const get = type => parts.find(p => p.type === type).value;
-
+  const get=type=>parts.find(p=>p.type===type).value;
   return `${get('year')}-${get('month')}-${get('day')}`;
 }
 function state(c,as){const d=dateObj(as),s=dateObj(c.start),e=dateObj(c.end);if(d<s)return'upcoming';if(d>e)return'closed';return'active'}
