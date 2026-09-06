@@ -36,6 +36,10 @@ CREATE TABLE IF NOT EXISTS audit_log (
   competitionId TEXT,
   at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
 `);
 
 app.disable('x-powered-by');
@@ -90,6 +94,80 @@ function validateComp(c){
   }
 }
 function audit(action,id){ db.prepare('INSERT INTO audit_log(action,competitionId,at) VALUES(?,?,?)').run(action,id||null,nowISO()); }
+
+
+function seedInitialCompetitions(){
+  const key='seed_2026_09_lica_bmo_v1';
+  const exists=db.prepare('SELECT value FROM app_settings WHERE key=?').get(key);
+  if(exists) return;
+  const insert=db.prepare(`INSERT OR IGNORE INTO competitions(id,name,start,end,roles,fields,milestones,posterData,archived,createdAt,updatedAt)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?)`);
+  const now=nowISO();
+  const lica={
+    id:'active_sep_lica_2026',
+    name:'ACTIVE SEPTEMBER — LICA',
+    start:'2026-09-01', end:'2026-09-15', roles:['lica'],
+    fields:[
+      {id:'agencyStrength',label:'31-08-2026 की Total Agency Strength',note:'Percentage activation इसी total agency strength पर reckoned है.'},
+      {id:'activeAgents',label:'Campaign में Active Agents',note:'Poster के activation levels के लिए active agents.'},
+      {id:'activationPercent',label:'Activation %',note:'Poster के अनुसार 30% / 35% / 40% levels. Percentage poster rule के अनुसार दर्ज करें.'},
+      {id:'inactiveActivated',label:'31-08-2026 को Inactive Agents में से Activated Agents',note:'हर ऐसे Active Agent पर ₹200 additional cash award.'}
+    ],
+    milestones:[
+      {title:'Level A — 30% Activation',reward:'₹300 — हर 2 Active Agents के block पर',condition:'activationPercent >= 30 && activeAgents >= 10'},
+      {title:'Level B — 35% Activation',reward:'Level-A पर 20% Extra',condition:'activationPercent >= 35 && activeAgents >= 12'},
+      {title:'Level C — 40% Activation',reward:'Level-A पर 50% Extra',condition:'activationPercent >= 40 && activeAgents >= 15'},
+      {title:'Additional Cash Award — Inactive Agents Activation',reward:'₹200 — प्रत्येक Activated Inactive Agent',condition:'inactiveActivated >= 1'}
+    ],
+    posterData:'/active-september-lica.jpg', archived:false
+  };
+  const bmo={
+    id:'platinum_raksha_bmo_2026',
+    name:'PLATINUM RAKSHA — Launching Day Campaign for BMOs',
+    start:'2026-09-07', end:'2026-09-07', roles:['marketing'],
+    fields:[
+      {id:'bpjrPolicies',label:'07-09-2026: BP/JR Policies',note:'Poster में BP/JR policies का combined count.'}
+    ],
+    milestones:[
+      {title:'Level 1 — 20 BP/JR Policies',reward:'₹4,000 for Branch',condition:'bpjrPolicies >= 20'},
+      {title:'Level 2 — Every 10 Policies (up to 50)',reward:'₹2,000 additional',condition:'bpjrPolicies >= 30'},
+      {title:'Level 3 — Every 10 Policies (up to 50)',reward:'₹2,000 additional',condition:'bpjrPolicies >= 40'},
+      {title:'Level 4 — Every 10 Policies (up to 50)',reward:'₹2,000 additional',condition:'bpjrPolicies >= 50'},
+      {title:'Thereafter — Every 5 Policies',reward:'₹2,000 additional per 5 policies',condition:'bpjrPolicies >= 55'}
+    ],
+    posterData:'/platinum-raksha-bmo.jpg', archived:false
+  };
+  const tx=db.transaction(()=>{
+    for(const c of [lica,bmo]) insert.run(c.id,c.name,c.start,c.end,JSON.stringify(c.roles),JSON.stringify(c.fields),JSON.stringify(c.milestones),c.posterData,0,now,now);
+    db.prepare('INSERT INTO app_settings(key,value) VALUES(?,?)').run(key,now);
+  });
+  tx();
+  audit('SEED_INITIAL_COMPETITIONS',null);
+}
+seedInitialCompetitions();
+// Migrate the original five hard-coded/source competitions into the same
+// server-backed competition table used by all future poster uploads.
+function seedLegacySourceCompetitions(){
+  const key='seed_legacy_source_competitions_v1';
+  if(db.prepare('SELECT value FROM app_settings WHERE key=?').get(key)) return;
+  const insert=db.prepare(`INSERT OR IGNORE INTO competitions(id,name,start,end,roles,fields,milestones,posterData,archived,createdAt,updatedAt)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?)`);
+  const now=nowISO();
+  const legacy=[
+    {id:'launchA',name:'Launching Day Special — Agents',start:'2026-09-07',end:'2026-09-07',roles:['agent'],fields:[{id:'t770nop',label:'07-09-2026: T-770 NOP',note:'हर NOP = ₹500'},{id:'t770tfp',label:'07-09-2026: T-770 TFP (₹)',note:'हर ₹50,000 block = ₹250'},{id:'jrsp',label:'07-09-2026: T-894 SP Policies',note:'हर SP Policy = ₹1,000'},{id:'jrnp',label:'07-09-2026: T-894 NSP Policies',note:'हर NSP Policy = ₹500'}],milestones:[{title:'T-770 NOP Reward',reward:'₹500 each',condition:'t770nop >= 1'},{title:'T-770 TFP Reward',reward:'₹250 per ₹50,000 block',condition:'t770tfp >= 50000'},{title:'T-894 SP Reward',reward:'₹1,000 each',condition:'jrsp >= 1'},{title:'T-894 NSP Reward',reward:'₹500 each',condition:'jrnp >= 1'}],posterData:'/source-launch-agents.jpg'},
+    {id:'launchB',name:'Launching Day Special — DOS/LICAS',start:'2026-09-07',end:'2026-09-07',roles:['dos'],fields:[{id:'dosQualAgents',label:'07-09-2026: Qualifying Agents',note:'पहले 3 = ₹1,000; उसके बाद हर 3 = ₹1,200'},{id:'dosSpPremium',label:'07-09-2026: T-894 SP Premium (₹)',note:'हर ₹1 लाख SP Premium block = ₹200'}],milestones:[{title:'पहले 3 Qualifying Agents',reward:'₹1,000',condition:'dosQualAgents >= 3'},{title:'हर अगला Block of 3 Qualifying Agents',reward:'₹1,200',condition:'dosQualAgents >= 6'},{title:'New Jeevan Raksha SP Premium Bonus',reward:'₹200 / ₹1 लाख',condition:'dosSpPremium >= 100000'}],posterData:'/source-launch-dos-licas.jpg'},
+    {id:'uleap',name:'U-LEAP',start:'2026-09-01',end:'2026-09-30',roles:['agent'],fields:[{id:'ulip',label:'इस महीने की ULIP Policies',note:'Cancelled/Dishonoured policies अलग से exclude होती हैं.'},{id:'invalidUlip',label:'Cancelled / Dishonoured ULIP Policies',note:'ये ULIP count में नहीं गिनी जाएँगी.'},{id:'appointment',label:'Valid Appointment Letter?',note:'U-LEAP eligibility check'},{id:'enach',label:'Payment Pre-validated eNACH?',note:'U-LEAP eligibility check'}],milestones:[{title:'11 ULIP',reward:'₹5,000',condition:'ulip >= 11'},{title:'21 ULIP',reward:'₹15,000',condition:'ulip >= 21'},{title:'35 ULIP',reward:'₹35,000',condition:'ulip >= 35'},{title:'51 ULIP',reward:'₹65,000',condition:'ulip >= 51'},{title:'75 ULIP',reward:'₹1,00,000',condition:'ulip >= 75'},{title:'101 ULIP',reward:'₹1,75,000',condition:'ulip >= 101'}],posterData:'/source-uleap.jpg'},
+    {id:'platinum',name:'प्लेटिनम धमाका',start:'2026-09-01',end:'2026-09-30',roles:['agent'],fields:[{id:'ulip',label:'इस महीने की ULIP Policies',note:'Total NOP calculation में शामिल'},{id:'otherNop',label:'इस महीने की Other Policies',note:'Total NOP calculation में शामिल'},{id:'totalTfp',label:'इस महीने का Total TFP (₹ लाख)',note:'Platinum TFP thresholds के लिए'}],milestones:[{title:'Level 3 — Multipurpose Fan',reward:'Multipurpose Fan',condition:'ulip >= 5 || otherNop >= 5'},{title:'Level 4 — Mixer Grinder',reward:'Mixer Grinder',condition:'ulip >= 7 || otherNop >= 7'},{title:'Level 5 — Gas Stove',reward:'Gas Stove',condition:'ulip >= 10 || otherNop >= 10'},{title:'Level 6 — Gas Stove + Multipurpose Fan',reward:'Gas Stove + Multipurpose Fan',condition:'ulip >= 15 || otherNop >= 15'},{title:'Level 7 — Mixer Grinder + Fan + Gas Stove',reward:'Mixer Grinder + Fan + Gas Stove',condition:'ulip >= 21 || otherNop >= 21'},{title:'Level 8 — Samsung Galaxy 5G Mobile',reward:'Samsung Galaxy 5G Mobile',condition:'ulip >= 31 || otherNop >= 31'},{title:'Level 9 — Fully Automatic Washing Machine',reward:'Fully Automatic Washing Machine',condition:'ulip >= 41 || otherNop >= 41'},{title:'Level 10 — Split AC',reward:'Split AC',condition:'ulip >= 51 || otherNop >= 51'},{title:'Level 11 — Split AC + Samsung Galaxy 5G Mobile',reward:'Split AC + Samsung Galaxy 5G Mobile',condition:'ulip >= 75 || otherNop >= 75'},{title:'Level 12 — Scooty',reward:'Scooty',condition:'ulip >= 101 || otherNop >= 101'},{title:'Level 13 — Motor Cycle (Hero Glamour)',reward:'Motor Cycle (Hero Glamour)',condition:'ulip >= 125 || otherNop >= 125'},{title:'Level 14 — Royal Enfield — Bullet / Thunder Bird',reward:'Royal Enfield — Bullet / Thunder Bird',condition:'ulip >= 150 || otherNop >= 150'}],posterData:'/source-platinum.jpg'},
+    {id:'picnic',name:'पॉलिसी करें, पिकनिक चलें',start:'2026-09-02',end:'2026-09-07',roles:['agent'],fields:[{id:'picnicNop',label:'02–07 Sep की NOP',note:'1 = ₹150 • 2 = ₹300 • 3 = Picnic (Single)'},{id:'puriQualified',label:'अगस्त Gateway to Puri में पहले से qualify?',note:'3 Picnic NOP पर Electric Kettle condition'}],milestones:[{title:'1 NOP',reward:'₹150',condition:'picnicNop >= 1'},{title:'2 NOP',reward:'₹300',condition:'picnicNop >= 2'},{title:'3 NOP',reward:'Picnic (Single)',condition:'picnicNop >= 3'}],posterData:'/source-picnic.jpg'}
+  ];
+  const tx=db.transaction(()=>{
+    for(const c of legacy) insert.run(c.id,c.name,c.start,c.end,JSON.stringify(c.roles),JSON.stringify(c.fields),JSON.stringify(c.milestones),c.posterData,0,now,now);
+    db.prepare('INSERT INTO app_settings(key,value) VALUES(?,?)').run(key,now);
+  });
+  tx();
+  audit('MIGRATE_LEGACY_SOURCE_COMPETITIONS',null);
+}
+seedLegacySourceCompetitions();
 
 app.get('/api/health',(req,res)=>res.json({ok:true,time:nowISO()}));
 app.get('/api/competitions',(req,res)=>res.json({competitions:allComps()}));
