@@ -105,16 +105,15 @@ function seedInitialCompetitions(){
   const now=nowISO();
   const lica={
     id:'active_sep_lica_2026',
-    name:'ACTIVE SEPTEMBER — LICA',
-    start:'2026-09-01', end:'2026-09-15', roles:['lica'],
+    name:'ACTIVE SEPTEMBER — DO / SBA / LICA',
+    start:'2026-09-01', end:'2026-09-15', roles:['dos'],
     fields:[
-      {id:'agencyStrength',label:'31-08-2026 की Total Agency Strength',note:'Percentage activation इसी total agency strength पर reckoned है.'},
-      {id:'activeAgents',label:'Campaign में Active Agents',note:'Poster के activation levels के लिए active agents.'},
-      {id:'activationPercent',label:'Activation %',note:'Poster के अनुसार 30% / 35% / 40% levels. Percentage poster rule के अनुसार दर्ज करें.'},
-      {id:'inactiveActivated',label:'31-08-2026 को Inactive Agents में से Activated Agents',note:'हर ऐसे Active Agent पर ₹200 additional cash award.'}
+      {id:'agencyStrength',label:'31-08-2026 की Total Agency Strength',note:'Activation % इसी total agency strength पर reckoned होगा.'},
+      {id:'activeAgents',label:'Campaign Period में Active Agents',note:'DO / SBA / LICA के under agents activated/active during campaign period.'},
+      {id:'inactiveActivated',label:'31-08-2026 को Inactive Agents में से Activated Agents',note:'31-08-2026 को inactive रहे agents में से campaign में activate हुए agents.'}
     ],
     milestones:[
-      {title:'Level A — 30% Activation',reward:'₹300 — हर 2 Active Agents के block पर',condition:'activationPercent >= 30 && activeAgents >= 10'},
+      {title:'Level A — 30% Activation',reward:'₹300 — प्रत्येक 2 Active Agents के block पर',condition:'activationPercent >= 30 && activeAgents >= 10'},
       {title:'Level B — 35% Activation',reward:'Level-A पर 20% Extra',condition:'activationPercent >= 35 && activeAgents >= 12'},
       {title:'Level C — 40% Activation',reward:'Level-A पर 50% Extra',condition:'activationPercent >= 40 && activeAgents >= 15'},
       {title:'Additional Cash Award — Inactive Agents Activation',reward:'₹200 — प्रत्येक Activated Inactive Agent',condition:'inactiveActivated >= 1'}
@@ -144,7 +143,30 @@ function seedInitialCompetitions(){
   tx();
   audit('SEED_INITIAL_COMPETITIONS',null);
 }
+function migrateActiveSeptemberRolesV2(){
+  const key='migrate_active_sep_dos_sba_lica_v2';
+  if(db.prepare('SELECT value FROM app_settings WHERE key=?').get(key)) return;
+  const c=db.prepare('SELECT * FROM competitions WHERE id=?').get('active_sep_lica_2026');
+  if(c){
+    const fields=[
+      {id:'agencyStrength',label:'31-08-2026 की Total Agency Strength',note:'Activation % इसी total agency strength पर reckoned होगा.'},
+      {id:'activeAgents',label:'Campaign Period में Active Agents',note:'DO / SBA / LICA के under agents activated/active during campaign period.'},
+      {id:'inactiveActivated',label:'31-08-2026 को Inactive Agents में से Activated Agents',note:'31-08-2026 को inactive रहे agents में से campaign में activate हुए agents.'}
+    ];
+    const milestones=[
+      {title:'Level A — 30% Activation',reward:'₹300 — प्रत्येक 2 Active Agents के block पर',condition:'activationPercent >= 30 && activeAgents >= 10'},
+      {title:'Level B — 35% Activation',reward:'Level-A पर 20% Extra',condition:'activationPercent >= 35 && activeAgents >= 12'},
+      {title:'Level C — 40% Activation',reward:'Level-A पर 50% Extra',condition:'activationPercent >= 40 && activeAgents >= 15'},
+      {title:'Additional Cash Award — Inactive Agents Activation',reward:'₹200 — प्रत्येक Activated Inactive Agent',condition:'inactiveActivated >= 1'}
+    ];
+    db.prepare('UPDATE competitions SET name=?, roles=?, fields=?, milestones=?, updatedAt=? WHERE id=?')
+      .run('ACTIVE SEPTEMBER — DO / SBA / LICA', JSON.stringify(['dos']), JSON.stringify(fields), JSON.stringify(milestones), nowISO(), c.id);
+  }
+  db.prepare('INSERT INTO app_settings(key,value) VALUES(?,?)').run(key,nowISO());
+}
+
 seedInitialCompetitions();
+migrateActiveSeptemberRolesV2();
 // Migrate the original five hard-coded/source competitions into the same
 // server-backed competition table used by all future poster uploads.
 function seedLegacySourceCompetitions(){
