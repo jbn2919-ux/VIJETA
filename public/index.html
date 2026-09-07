@@ -165,7 +165,7 @@
 @media(max-width:760px){#dosInputFields .field label{min-height:auto}}
 
 /* ===== DYNAMIC COMPETITION MANAGER ===== */
-.dynamic-manager-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.file-btn{display:inline-flex;align-items:center;cursor:pointer}.dynamic-builder{margin:14px 0;padding:16px;border:2px solid #cfd9e7;border-radius:14px;background:#f8fbff}.role-checks{display:flex;gap:14px;flex-wrap:wrap;font-weight:800}.bonus-below{display:block;clear:both;margin-top:18px}.dyn-rule-row{display:grid;grid-template-columns:1fr 2fr 2fr auto;gap:8px;margin:8px 0}.dyn-ms-row{grid-template-columns:1.5fr 1fr 2fr auto}.dyn-rule-row input{padding:10px;border:1px solid #cfd9e7;border-radius:9px}.dynamic-builder-actions{display:flex;gap:10px;margin-top:14px}.dynamic-comp-row{display:grid;grid-template-columns:260px minmax(0,1fr);gap:18px;padding:14px;margin:10px 0;border:2px solid #dbe3ef;border-radius:14px;background:#fff;align-items:start}.dynamic-poster-cell{width:260px;min-height:320px;height:320px;border-radius:12px;overflow:hidden;background:#eef2f7;display:flex;align-items:center;justify-content:center;padding:8px;border:1px solid #dbe3ef}.dyn-poster-thumb{width:100%;height:100%;object-fit:contain;display:block;cursor:zoom-in;border-radius:9px;background:#fff}.dyn-poster-placeholder{font-size:12px;font-weight:800;text-align:center}.dynamic-comp-name{font-size:21px;font-weight:950;margin-bottom:5px}.dynamic-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.btn-danger{border:0;background:#ffe8e8;color:#a40000;border-radius:9px;padding:9px 12px;font-weight:900;cursor:pointer}@media(max-width:760px){.dyn-rule-row,.dyn-ms-row{grid-template-columns:1fr}.dynamic-comp-row{grid-template-columns:1fr}.dynamic-poster-cell{width:100%;height:340px;min-height:340px}}
+.dynamic-manager-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.file-btn{display:inline-flex;align-items:center;cursor:pointer}.dynamic-builder{margin:14px 0;padding:16px;border:2px solid #cfd9e7;border-radius:14px;background:#f8fbff}.role-checks{display:flex;gap:14px;flex-wrap:wrap;font-weight:800}.bonus-below{display:block;clear:both;margin-top:18px}.dyn-rule-row{display:grid;grid-template-columns:1fr 2fr 2fr auto;gap:8px;margin:8px 0}.dyn-ms-row{grid-template-columns:1.5fr 1fr 2fr auto}.dyn-rule-row input{padding:10px;border:1px solid #cfd9e7;border-radius:9px}.dynamic-builder-actions{display:flex;gap:10px;margin-top:14px}.dynamic-comp-row{display:grid;grid-template-columns:110px 1fr;gap:14px;padding:14px;margin:10px 0;border:2px solid #dbe3ef;border-radius:14px;background:#fff}.dynamic-poster-cell{width:220px;min-height:280px;height:280px;border-radius:12px;overflow:hidden;background:#eef2f7;display:flex;align-items:center;justify-content:center;padding:8px;border:1px solid #dbe3ef}.dyn-poster-thumb{width:100%;height:100%;object-fit:contain;display:block;cursor:zoom-in;border-radius:9px;background:#fff}.dyn-poster-placeholder{font-size:12px;font-weight:800;text-align:center}.dynamic-comp-name{font-size:21px;font-weight:950;margin-bottom:5px}.dynamic-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.btn-danger{border:0;background:#ffe8e8;color:#a40000;border-radius:9px;padding:9px 12px;font-weight:900;cursor:pointer}@media(max-width:760px){.dyn-rule-row,.dyn-ms-row{grid-template-columns:1fr}.dynamic-comp-row{grid-template-columns:1fr}.dynamic-poster-cell{width:100%;height:180px}}
 </style>
 
 <style>
@@ -366,6 +366,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closePosterViewer();
 // All competitions (legacy/source + newly uploaded) are managed in one server-backed list.
 function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function dynamicInputId(id){return 'dyn_'+String(id).replace(/[^a-zA-Z0-9_]/g,'_')}
+function roleLabel(role){return ({agent:'Agent',dos:'DO / SBA / LICA',lica:'LICA',marketing:'Marketing Officials / BMO',clia:'CLIA'})[role]||role||''}
+function competitionSummary(c){
+ const m=(c.milestones||[]).map(x=>x.title+' — '+x.reward).filter(Boolean);
+ if(c.id==='active_sep_lica_2026') return 'NB Campaign for DOs / SBAs / LICAs • 30% / 35% / 40% Activation • ₹300 per 2 Active Agents • ₹200 per Inactive Agent Activated';
+ if(c.id==='platinum_raksha_bmo_2026') return 'Launching Day Campaign for BMOs • BP/JR Policies • ₹4,000 at 20 policies + additional rewards thereafter';
+ return m.length?m.join(' • '):'Competition rules देखें.';
+}
 function renderDynamicFields(){
  const host=document.getElementById('dynamicCompetitionFields'); if(!host)return;
  const as=todayISO(); const active=dynamicComps.filter(c=>state(c,as)!=='closed');
@@ -373,8 +380,12 @@ function renderDynamicFields(){
  const renderable=active.filter(c=>!legacyIds.has(c.id) && (c.roles||[]).includes(selectedRole));
  if(!renderable.length){host.innerHTML='';return}
  host.innerHTML='<div class="role-input-title">⚙️ ACTIVE COMPETITIONS — इसी unified manager से managed</div>'+renderable.map(c=>{
-   const fs=(c.fields||[]).map(f=>`<div class="field"><label>${esc(f.label||f.id)}</label><input type="number" id="${dynamicInputId(c.id+'_'+f.id)}" min="0" step="0.01" value="0"><small>${esc(f.note||'')}</small></div>`).join('');
-   return `<div class="group dynamic-group"><h4>📌 ${esc(c.name)} ${compBadge(c.id,as)}</h4><div class="small-note">${esc(c.start)} → ${esc(c.end)} • Role: ${esc((c.roles||[]).join(', '))}</div><div class="formgrid">${fs||'<div class="empty">इस competition में अभी कोई input field नहीं बनाया गया।</div>'}</div></div>`;
+   const fs=(c.fields||[]).map(f=>{
+   if(c.id==='active_sep_lica_2026' && f.id==='activationPercent') return '';
+   return `<div class="field"><label>${esc(f.label||f.id)}</label><input type="number" id="${dynamicInputId(c.id+'_'+f.id)}" min="0" step="0.01" value="0"><small>${esc(f.note||'')}</small></div>`;
+ }).join('');
+ const activeSepCalc=c.id==='active_sep_lica_2026'?'<div class="next-box" style="margin-top:10px"><h3>📊 Calculated Activation %</h3><div class="big" id="activeSepPercentLive">0.00%</div><div class="small-note">Active Agents ÷ 31-08-2026 Total Agency Strength × 100</div></div>':'';
+   return `<div class="group dynamic-group"><h4>📌 ${esc(c.name)} ${compBadge(c.id,as)}</h4><div class="small-note">${esc(c.start)} → ${esc(c.end)} • Role: ${esc((c.roles||[]).map(roleLabel).join(', '))}</div><div class="formgrid">${fs||'<div class="empty">इस competition में अभी कोई input field नहीं बनाया गया।</div>'}</div>${activeSepCalc}</div>`;
  }).join('');
 }
 function renderDynamicPosters(){
@@ -382,7 +393,7 @@ function renderDynamicPosters(){
  const as=todayISO();
  const rows=dynamicComps.map(c=>{
   const st=state(c,as); const poster=c.posterData?`<img class="dyn-poster-thumb" src="${c.posterData}" alt="poster" title="पूरा poster देखने के लिए क्लिक करें" onclick="openPosterViewer(this.src, ${JSON.stringify(c.name)})">`:'<div class="dyn-poster-placeholder">No Poster</div>';
-  return `<div class="dynamic-comp-row"><div class="dynamic-poster-cell">${poster}</div><div class="dynamic-comp-main"><div class="dynamic-comp-name">${esc(c.name)}</div><div>${esc(c.start)} → ${esc(c.end)} ${compBadge(c.id,as)}</div><div class="small-note">Roles: ${esc((c.roles||[]).join(', '))} • Fields: ${(c.fields||[]).length} • Milestones: ${(c.milestones||[]).length}</div><div class="dynamic-actions"><button class="btn-blue" onclick="viewDynamicRules('${esc(c.id)}')">View Rules</button><button class="btn-gray" onclick="archiveDynamic('${esc(c.id)}')">${st==='closed'?'Archive':'Archive'}</button><button class="btn-danger" onclick="deleteDynamicPoster('${esc(c.id)}')">Delete Poster</button><button class="btn-danger" onclick="deleteDynamicCompetition('${esc(c.id)}')">Delete Competition</button></div></div></div>`;
+  return `<div class="dynamic-comp-row"><div class="dynamic-poster-cell">${poster}</div><div class="dynamic-comp-main"><div class="dynamic-comp-name">${esc(c.name)}</div><div>${esc(c.start)} → ${esc(c.end)} ${compBadge(c.id,as)}</div><div class="small-note">Roles: ${esc((c.roles||[]).map(roleLabel).join(', '))} • Fields: ${(c.fields||[]).length} • Milestones: ${(c.milestones||[]).length}</div><div class="dynamic-actions"><button class="btn-blue" onclick="viewDynamicRules('${esc(c.id)}')">View Rules</button><button class="btn-gray" onclick="archiveDynamic('${esc(c.id)}')">${st==='closed'?'Archive':'Archive'}</button><button class="btn-danger" onclick="deleteDynamicPoster('${esc(c.id)}')">Delete Poster</button><button class="btn-danger" onclick="deleteDynamicCompetition('${esc(c.id)}')">Delete Competition</button></div></div></div>`;
  }).join('');
  host.innerHTML=rows||'<div class="empty">अभी कोई नया dynamic competition नहीं जोड़ा गया।</div>';
 }
@@ -484,7 +495,7 @@ function renderRunning(){
          ${urgent?'<div class="urgent-badge">⚠️ जल्दी समाप्त — अभी करें</div>':''}
        </div>
      </div>
-     <div class="running-info"><b>${text[c.id]}</b></div>
+     <div class="running-info"><b>${esc(text[c.id]||competitionSummary(c))}</b></div>
    </div>`
  }).join(''):'<div class="empty">आज कोई competition running नहीं है।</div>';
  const cs=document.getElementById('comingSoonWrap'),cl=document.getElementById('comingSoonList');
@@ -495,7 +506,7 @@ function renderRunning(){
      <div class="live-tag coming-tag">● COMING SOON</div>
      <div class="days-attention coming-days">⏳ शुरू होने में: <strong>${Math.ceil((dateObj(c.start)-dateObj(as))/86400000)} दिन</strong></div>
      <div class="card-window">📅 प्रतियोगिता अवधि: <b>${fmt(c.start)} – ${fmt(c.end)}</b></div>
-     <div class="running-info"><b>${text[c.id]}</b></div>
+     <div class="running-info"><b>${esc(text[c.id]||competitionSummary(c))}</b></div>
    </div>`).join('')
  }else{cs.style.display='none';cl.innerHTML=''}
 }
@@ -602,7 +613,18 @@ function v20MetricValues(comp){
  const out={}; (comp.fields||[]).forEach(f=>{
    const el=document.getElementById(dynamicInputId(comp.id+'_'+f.id));
    out[f.id]=Number(el?.value)||0;
- }); return out;
+ });
+ // ACTIVE SEPTEMBER: activation percentage is calculated from the poster rule,
+ // not entered manually. Percentage = Active Agents / Total Agency Strength × 100.
+ if(comp && comp.id==='active_sep_lica_2026'){
+   const agency=Number(document.getElementById(dynamicInputId(comp.id+'_agencyStrength'))?.value)||0;
+   const active=Number(document.getElementById(dynamicInputId(comp.id+'_activeAgents'))?.value)||0;
+   out.agencyStrength=agency;
+   out.activeAgents=active;
+   out.activationPercent=agency>0 ? (active/agency*100) : 0;
+   out.inactiveActivated=Number(document.getElementById(dynamicInputId(comp.id+'_inactiveActivated'))?.value)||0;
+ }
+ return out;
 }
 function v20EvalAtom(atom,vals){
  atom=atom.trim().replace(/^\(|\)$/g,'').trim();
@@ -623,6 +645,7 @@ function v20EvalCondition(expr,vals){
 }
 function v20DynamicResults(c){
  const vals=v20MetricValues(c);
+ if(c && c.id==='active_sep_lica_2026'){const el=document.getElementById('activeSepPercentLive');if(el)el.textContent=(vals.activationPercent||0).toFixed(2)+'%';}
  const ms=(c.milestones||[]).map((m,i)=>({...m,_i:i,done:v20EvalCondition(m.condition,vals)}));
  let current=-1; ms.forEach((m,i)=>{if(m.done)current=i});
  return {vals,ms,current,next:ms[current+1]||null};
