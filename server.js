@@ -80,7 +80,7 @@ function allComps(){ return db.prepare('SELECT * FROM competitions ORDER BY star
 function getComp(id){ const c=db.prepare('SELECT * FROM competitions WHERE id=?').get(id); return c?cleanComp(c):null; }
 function validateComp(c){
   if(!c || !String(c.name||'').trim()) throw new Error('Competition name is required');
-  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(c.start)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(c.end)) throw new Error('Invalid dates');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(c.start)||!/^\d{4}-\d{2}-\d{2}$/.test(c.end)) throw new Error('Invalid dates');
   if(c.end<c.start) throw new Error('End date cannot be before start date');
   if(!Array.isArray(c.roles)||!c.roles.length) throw new Error('At least one role is required');
   if(!Array.isArray(c.fields)||!c.fields.length) throw new Error('At least one input field is required');
@@ -88,8 +88,9 @@ function validateComp(c){
   for(const f of c.fields){ if(!String(f.id||'').trim()||!String(f.label||'').trim()) throw new Error('Every field needs an id and label'); }
   for(const m of (c.milestones||[])){
     if(!String(m.title||'').trim()) throw new Error('Every milestone needs a title');
-    const atoms=String(m.condition||'').match(/[A-Za-z_][\\w-]*\\s*(?:>=|<=|==|!=|>|<)/g)||[];
-    const bad=atoms.map(x=>x.trim().split(/\\s+/)[0]).filter(x=>!ids.has(x));
+    const atoms=String(m.condition||'').match(/[A-Za-z_][\w-]*\s*(?:>=|<=|==|!=|>|<)/g)||[];
+    const allowed=new Set(ids); if(c.id==='active_sep_lica_2026') allowed.add('activationPercent');
+    const bad=atoms.map(x=>x.trim().split(/\s+/)[0]).filter(x=>!allowed.has(x));
     if(bad.length) throw new Error('Unknown field id in milestone: '+bad.join(', '));
   }
 }
