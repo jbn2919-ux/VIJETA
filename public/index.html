@@ -269,7 +269,7 @@
     <div class="section-title">⚙️ VIJETA Competition & Poster Manager</div>
     <div class="v20-public-note">👥 <b>Agent/DO के लिए:</b> यहाँ सभी competitions और उनके posters/rules एक ही manager से दिखते हैं। Poster बदलने, competition जोड़ने/हटाने और rules edit करने के लिए <b>Admin Unlock</b> जरूरी है.</div>
     <div class="v20-lock"><span id="v20AdminStatus">🔒 ADMIN LOCKED</span><span class="v20-admin-badge">सिर्फ Admin changes</span><button class="btn-blue" style="float:right" onclick="v20AdminLogin()">🔐 Admin Unlock</button><div style="clear:both"></div><div class="v20-mini" style="margin-top:7px">Shared link खोलने वाले users को Google Sign-in या user login की जरूरत नहीं है. Poster/rules बदलने के लिए server-side Admin password जरूरी है.</div></div>
-    <div class="dynamic-manager-toolbar v20-admin-only" id="v20AdminToolbar"><button type="button" class="btn-blue" id="addCompetitionBtn" onclick="window.openDynamicBuilder()">➕ Upload / Add New Competition</button><button class="btn-gray" onclick="exportDynamicConfig()">⬇️ Backup</button><label class="btn-gray file-btn">⬆️ Restore <input type="file" accept="application/json" onchange="importDynamicConfig(this)" hidden></label></div>
+    <div class="dynamic-manager-toolbar v20-admin-only" id="v20AdminToolbar"><button type="button" class="btn-blue" id="addCompetitionBtn" onclick="window.v20OpenDynamicBuilder()">➕ Upload / Add New Competition</button><button class="btn-gray" onclick="exportDynamicConfig()">⬇️ Backup</button><label class="btn-gray file-btn">⬆️ Restore <input type="file" accept="application/json" onchange="importDynamicConfig(this)" hidden></label></div>
     <div id="dynamicPosterManager"></div>
     <div class="v20-admin-only" id="v20AdminPanelHint"><div class="v20-admin-panel"><b>🛡️ Admin mode active</b> — केवल इस mode में poster/rules mutate होंगे. <button class="btn-gray" onclick="v20AdminLogout()">Lock Admin</button></div></div>
     <div id="dynamicBuilder" class="dynamic-builder" style="display:none">
@@ -280,7 +280,7 @@
           <div class="field"><label>Competition Name</label><input id="dynName" required></div>
           <div class="field"><label>Start Date</label><input id="dynStart" type="date" required></div>
           <div class="field"><label>End Date</label><input id="dynEnd" type="date" required></div>
-          <div class="field"><label>Poster Image</label><input id="dynPosterFile" type="file" accept="image/*"><small>Optional: AI draft extraction के लिए poster image.</small></div>
+          <div class="field"><label>Poster Image</label><input id="dynPosterFile" type="file" accept="image/*"><small>Optional: AI draft extraction के लिए poster image. AI चलाने के लिए Render में OPENAI_API_KEY configured होना चाहिए.</small></div>
         </div>
         <div class="group"><h4>👥 Eligible Roles</h4><div id="dynRoles" class="role-checks"><label><input type="checkbox" value="agent"> Agent</label><label><input type="checkbox" value="dos"> DO / SBA / LICA</label><label><input type="checkbox" value="lica"> LICA</label><label><input type="checkbox" value="marketing"> Marketing Officials / BMO</label><label><input type="checkbox" value="clia"> CLIA</label></div></div>
         <div class="group"><h4>📥 Input Fields</h4><div id="dynFieldsRows"></div><button type="button" class="btn-gray" onclick="addDynamicFieldRow()">+ Add Field</button></div>
@@ -392,11 +392,15 @@ function renderDynamicPosters(){
  const host=document.getElementById('dynamicPosterManager'); if(!host)return;
  const as=todayISO();
  const rows=dynamicComps.map(c=>{
-  const st=state(c,as); const poster=c.posterData?`<img class="dyn-poster-thumb" src="${c.posterData}" alt="poster" title="पूरा poster देखने के लिए क्लिक करें" onclick="openPosterViewer(this.src, ${JSON.stringify(c.name)})">`:'<div class="dyn-poster-placeholder">No Poster</div>';
-  return `<div class="dynamic-comp-row"><div class="dynamic-poster-cell">${poster}</div><div class="dynamic-comp-main"><div class="dynamic-comp-name">${esc(c.name)}</div><div>${esc(c.start)} → ${esc(c.end)} ${compBadge(c.id,as)}</div><div class="small-note">Roles: ${esc((c.roles||[]).map(roleLabel).join(', '))} • Fields: ${(c.fields||[]).length} • Milestones: ${(c.milestones||[]).length}</div><div class="dynamic-actions"><button class="btn-blue" onclick="viewDynamicRules('${esc(c.id)}')">View Rules</button><button class="btn-gray" onclick="archiveDynamic('${esc(c.id)}')">${st==='closed'?'Archive':'Archive'}</button><button class="btn-danger" onclick="deleteDynamicPoster('${esc(c.id)}')">Delete Poster</button><button class="btn-danger" onclick="deleteDynamicCompetition('${esc(c.id)}')">Delete Competition</button></div></div></div>`;
+  const st=state(c,as);
+  const poster=c.posterData?`<img class="dyn-poster-thumb" src="${c.posterData}" alt="poster" title="पूरा poster देखने के लिए क्लिक करें" onclick="openPosterViewer(this.src, ${JSON.stringify(c.name)})">`:'<div class="dyn-poster-placeholder">No Poster</div>';
+  const edit=serverAdmin?`<button class="btn-blue server-edit-btn" type="button" onclick="v20EditCompetition('${esc(c.id)}')">✏️ Edit Rules / Poster</button>`:'';
+  const adminActions=serverAdmin?`<button class="btn-gray" type="button" onclick="archiveDynamic('${esc(c.id)}')">Archive</button><button class="btn-danger" type="button" onclick="deleteDynamicPoster('${esc(c.id)}')">Delete Poster</button><button class="btn-danger" type="button" onclick="deleteDynamicCompetition('${esc(c.id)}')">Delete Competition</button>`:'';
+  return `<div class="dynamic-comp-row"><div class="dynamic-poster-cell">${poster}</div><div class="dynamic-comp-main"><div class="dynamic-comp-name">${esc(c.name)}</div><div>${esc(c.start)} → ${esc(c.end)} ${compBadge(c.id,as)}</div><div class="small-note">Roles: ${esc((c.roles||[]).map(roleLabel).join(', '))} • Fields: ${(c.fields||[]).length} • Milestones: ${(c.milestones||[]).length}</div><div class="dynamic-actions">${edit}<button class="btn-blue" type="button" onclick="viewDynamicRules('${esc(c.id)}')">View Rules</button>${adminActions}</div></div></div>`;
  }).join('');
- host.innerHTML=rows||'<div class="empty">अभी कोई नया dynamic competition नहीं जोड़ा गया।</div>';
+ host.innerHTML=rows||'<div class="empty">अभी कोई competition नहीं है।</div>';
 }
+
 function archiveDynamic(id){const i=dynamicComps.findIndex(c=>c.id===id);if(i<0)return;dynamicComps[i].archived=true;saveDynamic();renderDynamicPosters();renderRunning();renderDynamicFields();alert('Competition archive कर दिया गया। Rules सुरक्षित हैं।')}
 function deleteDynamicPoster(id){const i=dynamicComps.findIndex(c=>c.id===id);if(i<0)return;if(!confirm('सिर्फ poster हटाना है? Competition rules सुरक्षित रहेंगे.'))return;dynamicComps[i].posterData='';saveDynamic();renderDynamicPosters();}
 function deleteDynamicCompetition(id){const i=dynamicComps.findIndex(c=>c.id===id);if(i<0)return;if(!confirm('पूरी competition और उसके rules हटाने हैं?'))return;dynamicComps.splice(i,1);saveDynamic();renderDynamicPosters();renderDynamicFields();renderRunning();calculate();}
@@ -628,7 +632,7 @@ function v20MetricValues(comp){
 }
 function v20EvalAtom(atom,vals){
  atom=atom.trim().replace(/^\(|\)$/g,'').trim();
- const m=atom.match(/^([A-Za-z_][\\w-]*)\\s*(>=|<=|==|!=|>|<)\\s*(-?\\d+(?:\\.\\d+)?)$/);
+ const m=atom.match(/^([A-Za-z_][\w-]*)\s*(>=|<=|==|!=|>|<)\s*(-?\d+(?:\.\d+)?)$/);
  if(!m)return false;
  const a=Number(vals[m[1]]??0), b=Number(m[3]);
  switch(m[2]){case'>=':return a>=b;case'<=':return a<=b;case'==':return a===b;case'!=':return a!==b;case'>':return a>b;case'<':return a<b;}
@@ -641,7 +645,7 @@ function v20EvalCondition(expr,vals){
 // Fix bind-free evaluation for readability/robustness.
 function v20EvalCondition(expr,vals){
  if(!expr)return false;
- return expr.split(/\\s*\\|\\|\\s*/).some(group=>group.split(/\\s*&&\\s*/).every(atom=>v20EvalAtom(atom,vals)));
+ return expr.split(/\\s*\\|\\|\\s*/).some(group=>group.split(/\s*&&\s*/).every(atom=>v20EvalAtom(atom,vals)));
 }
 function v20DynamicResults(c){
  const vals=v20MetricValues(c);
@@ -700,7 +704,7 @@ window.createDynamicCompetition=function(){
  const milestones=[...document.querySelectorAll('#dynMilestoneRows .dyn-ms-row')].map(r=>({title:r.querySelector('.dm-title').value.trim(),reward:r.querySelector('.dm-reward').value.trim(),condition:r.querySelector('.dm-condition').value.trim()})).filter(x=>x.title);
  if(!fields.length){alert('कम से कम एक Input Field जोड़ें.');return}
  const ids=new Set(fields.map(f=>f.id));
- for(const m of milestones){const atoms=(m.condition.match(/[A-Za-z_][\\w-]*\\s*(?:>=|<=|==|!=|>|<)/g)||[]).map(x=>x.trim().split(/\\s+/)[0]);const bad=atoms.filter(id=>!ids.has(id));if(bad.length){alert('Milestone condition में unknown field ID: '+bad.join(', '));return}}
+ for(const m of milestones){const atoms=(m.condition.match(/[A-Za-z_][\w-]*\s*(?:>=|<=|==|!=|>|<)/g)||[]).map(x=>x.trim().split(/\\s+/)[0]);const bad=atoms.filter(id=>!ids.has(id));if(bad.length){alert('Milestone condition में unknown field ID: '+bad.join(', '));return}}
  const file=document.getElementById('dynPosterFile').files[0];
  const finish=data=>{dynamicComps.push({id:'dyn_'+Date.now(),name,start,end,roles,fields,milestones,posterData:data||'',createdAt:new Date().toISOString(),archived:false,engine:'v20'});saveDynamic();renderDynamicPosters();renderDynamicFields();renderRunning();closeDynamicBuilder();document.getElementById('dynamicBuilderForm').reset();document.getElementById('dynFieldsRows').innerHTML='';document.getElementById('dynMilestoneRows').innerHTML='';alert('Competition add + rule engine activate हो गया।');};
  if(file){const rd=new FileReader();rd.onload=()=>finish(rd.result);rd.readAsDataURL(file)}else finish('');
@@ -794,7 +798,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       renderDynamicPosters();renderDynamicFields();renderRunning();calculate();
     }catch(e){console.error('VIJETA load failed',e);}
   }
-  window.openDynamicBuilder=()=>{if(!window.v20RequireAdmin())return; document.getElementById('dynamicBuilder').style.display='block';};
+  window.v20OpenDynamicBuilder=()=>{if(!window.v20RequireAdmin())return; const b=document.getElementById('dynamicBuilder'); if(b)b.style.display='block';};
+  window.openDynamicBuilder=window.v20OpenDynamicBuilder;
   window.closeDynamicBuilder=()=>{document.getElementById('dynamicBuilder').style.display='none';};
   window.createDynamicCompetition=async()=>{
     if(!window.v20RequireAdmin())return;
@@ -806,7 +811,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     const milestones=[...document.querySelectorAll('#dynMilestoneRows .dyn-ms-row')].map(r=>({title:r.querySelector('.dm-title').value.trim(),reward:r.querySelector('.dm-reward').value.trim(),condition:r.querySelector('.dm-condition').value.trim()})).filter(x=>x.title);
     if(!roles.length||!fields.length)return alert('कम से कम एक Role और एक Input Field जरूरी है.');
     const ids=new Set(fields.map(f=>f.id));
-    for(const m of milestones){const atoms=(m.condition.match(/[A-Za-z_][\w-]*\s*(?:>=|<=|==|!=|>|<)/g)||[]).map(x=>x.trim().split(/\s+/)[0]);const bad=atoms.filter(id=>!ids.has(id));if(bad.length)return alert('Milestone condition में unknown field ID: '+bad.join(', '));}
+    const allowedIds=new Set(ids); if(id==='active_sep_lica_2026')allowedIds.add('activationPercent');
+    for(const m of milestones){const atoms=(m.condition.match(/[A-Za-z_][\w-]*\s*(?:>=|<=|==|!=|>|<)/g)||[]).map(x=>x.trim().split(/\s+/)[0]);const bad=atoms.filter(id=>!allowedIds.has(id));if(bad.length)return alert('Milestone condition में unknown field ID: '+bad.join(', '));}
     const posterData=await readFile(document.getElementById('dynPosterFile').files[0]);
     try{await api('/api/admin/competitions',{method:'POST',body:JSON.stringify({name,start,end,roles,fields,milestones,posterData,archived:false})});await loadServer();closeDynamicBuilder();document.getElementById('dynamicBuilderForm').reset();document.getElementById('dynFieldsRows').innerHTML='';document.getElementById('dynMilestoneRows').innerHTML='';alert('Competition publish हो गई.');}
     catch(e){alert('Save failed: '+e.message)}
@@ -845,12 +851,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       const mb=document.getElementById('dynMilestoneRows');mb.innerHTML='';(p.milestones||[]).forEach(m=>addDynamicMilestoneRow(m));
       if((p.warnings||[]).length)alert('AI draft तैयार है. Review जरूर करें:\n\n'+p.warnings.join('\n'));
       else alert('AI draft तैयार है. Publish करने से पहले poster से हर rule verify करें.');
-    }catch(e){alert('AI extraction failed: '+e.message+'\n\nAI optional है; manual rule setup भी available है.')}
+    }catch(e){alert('AI extraction failed: '+e.message+'\n\nAI optional है. Manual setup हमेशा available है. AI के लिए Render → Environment में OPENAI_API_KEY configure करें.')}
   };
-
-  // Add Edit button to the existing manager without trusting browser state for mutations.
-  const originalRenderPosters=window.renderDynamicPosters;
-  window.renderDynamicPosters=function(){originalRenderPosters();const host=document.getElementById('dynamicPosterManager');if(!host)return;host.querySelectorAll('.dynamic-comp-row').forEach((row,idx)=>{const c=dynamicComps[idx];if(!c)return;const actions=row.querySelector('.dynamic-actions');if(!actions)return;[...actions.querySelectorAll('button')].forEach(b=>{if(!serverAdmin && /Archive|Delete/.test(b.textContent))b.style.display='none';});if(serverAdmin&&!actions.querySelector('.server-edit-btn')){const b=document.createElement('button');b.className='btn-blue server-edit-btn';b.textContent='✏️ Edit Rules / Poster';b.onclick=()=>window.v20EditCompetition(c.id);actions.insertBefore(b,actions.firstChild)}})};
 
   // Server-backed state is authoritative on every page load.
   document.addEventListener('DOMContentLoaded',async()=>{
